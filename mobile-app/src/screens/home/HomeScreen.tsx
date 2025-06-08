@@ -7,18 +7,33 @@ import {
   TouchableOpacity,
   RefreshControl,
   Platform,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ShoppingBag, CreditCard, Plus, User as UserIcon } from 'lucide-react-native';
+import { Plus } from 'lucide-react-native';
 import { User } from '../../types';
+const { colors } = require('../../constants/colors');
 import Header from '../../components/Header';
 import ErrorMessage from '../../components/ErrorMessage';
+import { menu } from '../../services/api';
+import MenuList from '../../components/ui/MenuList';
+
+type MenuItem = {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  type: string;
+};
 
 export const HomeScreen = ({ navigation }: any) => {
   const [user, setUser] = useState<User | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loadingMenu, setLoadingMenu] = useState(false);
 
   const loadUserData = async () => {
     try {
@@ -28,54 +43,53 @@ export const HomeScreen = ({ navigation }: any) => {
         setUser(JSON.parse(userData));
       }
     } catch (error) {
-      setError('Error loading user data. Pull down to refresh.');
+      setError('error, please try again later');
       console.error('Error loading user data:', error);
+    }
+  };
+
+  const loadMenu = async () => {
+    try {
+      setLoadingMenu(true);
+      setError(null);
+      const res = await menu.getAll();
+      console.log('Menu items:', res);
+      setMenuItems(res || []);
+    } catch (error) {
+      setError('error, please try again later');
+      setMenuItems([]);
+    } finally {
+      setLoadingMenu(false);
     }
   };
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    loadUserData().finally(() => setRefreshing(false));
+    Promise.all([loadUserData(), loadMenu()]).finally(() => setRefreshing(false));
   }, []);
 
   useEffect(() => {
     loadUserData();
+    loadMenu();
   }, []);
 
   const handleTopUp = () => {
     navigation.navigate('TopUp');
   };
-
-  const MenuCard = ({ 
-    title, 
-    icon: Icon,
-    description, 
-    onPress 
-  }: { 
-    title: string; 
-    icon: any;
-    description: string; 
-    onPress: () => void;
-  }) => (
-    <TouchableOpacity 
-      style={styles.menuCard}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={title}
-    >
-      <View style={styles.menuIconContainer}>
-        <Icon size={24} color="#111827" strokeWidth={2} />
-      </View>
-      <Text style={styles.menuTitle}>{title}</Text>
-      <Text style={styles.menuDescription}>{description}</Text>
-    </TouchableOpacity>
-  );
+  const handleMenuPress = (item: MenuItem) => {
+    // Navigasi sesuai kebutuhan, misal:
+    // navigation.navigate(item.route);
+    // Atau tampilkan alert:
+    alert(`Menu: ${item.title}`);
+  };
+  const menuItemsWithPress = menuItems.map((item) => ({
+    ...item,
+    onPress: () => handleMenuPress(item),
+  }));
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header 
-        title={`Welcome, ${user?.kode || 'User'}`}
-      />
+      <Header title={`Welcome, ${user?.kode || 'User'}`} />
 
       <ScrollView
         style={styles.scrollView}
@@ -97,7 +111,7 @@ export const HomeScreen = ({ navigation }: any) => {
           <Text style={styles.balanceAmount}>
             Rp {user?.saldo?.toLocaleString() || '0'}
           </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.topUpButton}
             onPress={handleTopUp}
             accessibilityRole="button"
@@ -108,24 +122,13 @@ export const HomeScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Access</Text>
-          <View style={styles.menuGrid}>
-            <MenuCard
-              title="Products"
-              icon={ShoppingBag}
-              description="Browse available items"
-              onPress={() => navigation.navigate('Products')}
-            />
-            <MenuCard
-              title="Transactions"
-              icon={CreditCard}
-              description="View your history"
-              onPress={() => navigation.navigate('Transactions')}
-            />
-          </View>
-        </View>
-
+          {loadingMenu ? (
+            <ActivityIndicator size="small" color="#2563EB" />
+          ) : (
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <MenuList items={menuItemsWithPress} navigation={navigation} />
+            </View>
+          )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -134,173 +137,103 @@ export const HomeScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.common.white,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 24,
+    padding: 16,
   },
   errorContainer: {
-    margin: 16,
+    marginBottom: 16,
   },
   balanceCard: {
-    margin: 16,
-    padding: 24,
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.background.default,
     borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 5,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: colors.common.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   balanceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
   balanceLabel: {
     fontSize: 14,
-    color: '#E5E7EB',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    color: colors.common.gray,
   },
   balanceAmount: {
-    fontSize: 36,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-    marginBottom: 16,
+    color: colors.common.black,
+    marginBottom: 8,
   },
   topUpButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: colors.common.blue,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   topUpIcon: {
-    marginRight: 4,
+    marginRight: 8,
   },
   topUpButtonText: {
-    color: '#2563EB',
+    color: colors.common.white,
     fontSize: 14,
-    fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-  },
-  section: {
-    padding: 16,
+    fontWeight: '500',
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 16,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-  },
-  menuGrid: {
-    flexDirection: 'row',
-    gap: 12,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: colors.common.black,
   },
   menuCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
+    flexGrow: 1,
+    backgroundColor: colors.common.white,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    shadowColor: colors.common.black,
+    shadowOffset: { width: -1, height: -1 },
     shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowRadius: Platform.OS === 'ios' ? undefined : undefined, // Adjust for Android
+    elevation: Platform.OS === 'android' ? undefined : undefined, // Adjust for iOS
+    flexDirection:'column', 
+   alignItems:'center'
+   ,
   },
   menuIconContainer: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.common.lightGray,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   menuTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: colors.common.black,
     marginBottom: 4,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   menuDescription: {
     fontSize: 14,
-    color: '#6B7280',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-  },
-  userInfoSection: {
-    padding: 16,
-  },
-  userInfoCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  userInfoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  userInfoHeaderText: {
-    marginLeft: 12,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-  },
-  userInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  userInfoRowLast: {
-    borderBottomWidth: 0,
-  },
-  userInfoLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-  },
-  userInfoValue: {
-    fontSize: 14,
-    color: '#111827',
-    fontWeight: '500',
+    color: colors.common.gray,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
 });
+
 
 export default HomeScreen;

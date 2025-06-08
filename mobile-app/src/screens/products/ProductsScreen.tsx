@@ -74,7 +74,13 @@ export const ProductsScreen = ({ navigation }: any) => {
       <SafeAreaView style={styles.container}>
         <Header 
           title="Products"
-          onBack={() => navigation.goBack()}
+          onBack={() => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.navigate('Tabs'); // Atau ke screen utama lain
+            }
+}}
         />
         <ErrorMessage message={error} onRetry={loadProducts} />
       </SafeAreaView>
@@ -85,7 +91,13 @@ export const ProductsScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.container}>
       <Header 
         title="Products"
-        onBack={() => navigation.goBack()}
+        onBack={() => {
+        if (navigation.canGoBack()) {
+          navigation.goBack();
+        } else {
+          navigation.navigate('Tabs'); // Atau ke screen utama lain
+        }
+}}
       />
 
       <FlatList

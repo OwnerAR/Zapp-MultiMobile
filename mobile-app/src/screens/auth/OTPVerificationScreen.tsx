@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyRound } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth } from '../../services/api';
+import { useAuth } from '../../store/AuthStore';
 import Header from '../../components/Header';
 import ErrorMessage from '../../components/ErrorMessage';
 import OTPInput from '../../components/ui/OTPInput';
@@ -23,6 +24,7 @@ export const OTPVerificationScreen = ({ route, navigation }: any) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRefs = useRef<any>(null);
+  const { setIsAuthenticated } = useAuth();
 
   const handleVerifyOTP = async () => {
     const otpString = otp.join('');
@@ -39,9 +41,7 @@ export const OTPVerificationScreen = ({ route, navigation }: any) => {
       // Store the token
       await AsyncStorage.setItem('token', response.token);
       await AsyncStorage.setItem('user', JSON.stringify(response.reseller));
-      
-      // Navigate to profile details
-      navigation.replace('Profile');
+      setIsAuthenticated(true);
     } catch (error: any) {
       setError(error.response?.data?.message || 'Invalid OTP. Please try again.');
     } finally {

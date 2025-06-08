@@ -1,7 +1,7 @@
 export const colors = {
   // Primary colors
   primary: {
-    main: '#2563EB',
+    main: '#3942FF',
     light: '#93C5FD',
     lighter: '#EFF6FF',
     dark: '#1E40AF',
@@ -30,6 +30,7 @@ export const colors = {
     success: {
       main: '#059669',
       light: '#ECFDF5',
+      contrastText: '#FFFFFF',
     },
     warning: {
       main: '#D97706',

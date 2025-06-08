@@ -1,9 +1,10 @@
 import axios from 'axios';
+import { REACT_APP_API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { mockAuthApi, mockProductsApi, mockTransactionsApi } from './mockApi';
+import { mockAuthApi, mockMenuApi, mockProductsApi, mockTransactionsApi } from './mockApi';
 
-const BASE_URL = 'http://your-api-url/api/v1';
-
+const BASE_URL = REACT_APP_API_URL;
+console.log('API Base URL:', BASE_URL);
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -52,5 +53,13 @@ export const providers = {
     return response.data;
   },
 };
+
+export const menu = {
+  getAll: mockMenuApi.getAll,
+  // getAll: async () => {
+  //   const response = await api.get('/menu');
+  //   return response.data;
+  // },
+}
 
 export default api;

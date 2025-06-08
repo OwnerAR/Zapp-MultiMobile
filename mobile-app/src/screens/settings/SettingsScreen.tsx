@@ -12,16 +12,18 @@ import colors from '../../constants/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '../../components/Header';
+import { useAuth } from '../../store/AuthStore';
 
 export const SettingsScreen = ({ navigation }: any) => {
   const [isDarkMode, setIsDarkMode] = React.useState(false);
   const [isNotificationsEnabled, setIsNotificationsEnabled] = React.useState(true);
   const [isBiometricEnabled, setIsBiometricEnabled] = React.useState(false);
+  const { setIsAuthenticated } = useAuth();
 
   const handleLogout = async () => {
     try {
       await AsyncStorage.multiRemove(['token', 'user']);
-      navigation.replace('Login');
+      setIsAuthenticated(false);
     } catch (error) {
       console.error('Error during logout:', error);
     }

@@ -7,11 +7,13 @@ import HomeScreen from '../screens/home/HomeScreen';
 import HistoryScreen from '../screens/history/HistoryScreen';
 import MutasiScreen from '../screens/mutasi/MutasiScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Tab = createBottomTabNavigator();
 
 export const TabsNavigator = () => {
   return (
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
@@ -21,10 +23,10 @@ export const TabsNavigator = () => {
         tabBarLabelStyle: styles.tabBarLabel,
         tabBarHideOnKeyboard: true,
       }}
-      initialRouteName="HomeTab"
+      initialRouteName="Home"
     >
       <Tab.Screen
-        name="HomeTab"
+        name="Home"
         component={HomeScreen}
         options={{
           tabBarLabel: 'Home',
@@ -34,7 +36,7 @@ export const TabsNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="HistoryTab"
+        name="History"
         component={HistoryScreen}
         options={{
           tabBarLabel: 'History',
@@ -44,7 +46,7 @@ export const TabsNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="MutasiTab"
+        name="Mutasi"
         component={MutasiScreen}
         options={{
           tabBarLabel: 'Mutasi',
@@ -54,7 +56,7 @@ export const TabsNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="SettingsTab"
+        name="Settings"
         component={SettingsScreen}
         options={{
           tabBarLabel: 'Settings',
@@ -64,6 +66,7 @@ export const TabsNavigator = () => {
         }}
       />
     </Tab.Navigator>
+    </SafeAreaView>
   );
 };
 

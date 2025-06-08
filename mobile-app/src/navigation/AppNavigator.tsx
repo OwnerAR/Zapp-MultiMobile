@@ -13,6 +13,10 @@ import SettingsScreen from '../screens/settings/SettingsScreen';
 import ProfileScreen from '../screens/settings/ProfileScreen';
 import TabsNavigator from './TabsNavigator';
 import { Product } from '../types';
+import PrepaidScreen from '../screens/transactions/PrepaidScreen';
+import PrepaidPLNScreen from '../screens/transactions/PrepaidPLNScreen';
+import { useAuth } from '../store/AuthStore';
+import { colors } from '../constants/colors';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -24,13 +28,15 @@ export type RootStackParamList = {
   TopUp: undefined;
   Settings: undefined;
   Profile: undefined;
+  Prepaid: undefined;
+  PrepaidPLN: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const AppNavigator = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAuthenticated, setIsAuthenticated } = useAuth();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -56,7 +62,7 @@ export const AppNavigator = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: '#FFFFFF' },
+          contentStyle: { backgroundColor: colors.background.default },
         }}
         initialRouteName={isAuthenticated ? 'Tabs' : 'Login'}
       >
@@ -110,6 +116,20 @@ export const AppNavigator = () => {
             <Stack.Screen 
               name="Profile" 
               component={ProfileScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen 
+              name="Prepaid" 
+              component={PrepaidScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen 
+              name="PrepaidPLN" 
+              component={PrepaidPLNScreen} // Assuming PrepaidScreen handles PLN as well
               options={{
                 animation: 'slide_from_right',
               }}

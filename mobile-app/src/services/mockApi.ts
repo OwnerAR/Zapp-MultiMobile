@@ -109,3 +109,36 @@ export const mockTransactionsApi = {
     return newTransaction;
   }
 };
+
+export const mockMenuApi = {
+  getAll: async () => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return [
+      {
+        id: '1',
+        title: 'Menu 1',
+        description: 'Description for Menu 1',
+        icon: 'User',
+        type: 'prepaid'
+      },
+      {
+        id: '2',
+        title: 'Menu 2',
+        description: 'Description for Menu 2',
+        icon: 'Wallet',
+        type: 'prepaid-pln'
+      }
+    ];
+  }
+};
+export const mockProvidersApi = {
+  getByPrefix: async (prefix: string) => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return mockProducts.filter(p => p.kode.startsWith(prefix));
+  },
+
+  getByCode: async (code: string) => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return mockProducts.find(p => p.kode === code);
+  }
+};
