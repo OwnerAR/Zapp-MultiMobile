@@ -52,8 +52,6 @@ export const OTPVerificationScreen = ({ route, navigation }: any) => {
       await AsyncStorage.setItem('token', response.token);
       await AsyncStorage.setItem('user', JSON.stringify(response.reseller));
       
-      // Navigate to main app
-      navigation.replace('Home');
     } catch (error: any) {
       setError(error.response?.data?.message || 'Invalid OTP. Please try again.');
     } finally {
