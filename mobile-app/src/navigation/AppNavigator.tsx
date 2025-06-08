@@ -4,20 +4,26 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LoginScreen from '../screens/auth/LoginScreen';
 import OTPVerificationScreen from '../screens/auth/OTPVerificationScreen';
-import HomeScreen from '../screens/home/HomeScreen';
 import LoadingScreen from '../components/LoadingScreen';
 import ProductsScreen from '../screens/products/ProductsScreen';
 import ProductDetailScreen from '../screens/products/ProductDetailScreen';
 import TransactionsScreen from '../screens/transactions/TransactionsScreen';
+import TopUpScreen from '../screens/topup/TopUpScreen';
+import SettingsScreen from '../screens/settings/SettingsScreen';
+import ProfileScreen from '../screens/settings/ProfileScreen';
+import TabsNavigator from './TabsNavigator';
 import { Product } from '../types';
 
 export type RootStackParamList = {
   Login: undefined;
   OTPVerification: { kode: string };
-  Home: undefined;
+  Tabs: undefined;
   Products: undefined;
   ProductDetail: { product: Product };
   Transactions: undefined;
+  TopUp: undefined;
+  Settings: undefined;
+  Profile: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -27,7 +33,6 @@ export const AppNavigator = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in
     const checkAuth = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
@@ -53,7 +58,7 @@ export const AppNavigator = () => {
           headerShown: false,
           contentStyle: { backgroundColor: '#FFFFFF' },
         }}
-        initialRouteName={isAuthenticated ? 'Home' : 'Login'}
+        initialRouteName={isAuthenticated ? 'Tabs' : 'Login'}
       >
         {!isAuthenticated ? (
           // Auth Stack
@@ -64,10 +69,51 @@ export const AppNavigator = () => {
         ) : (
           // Main App Stack
           <>
-            <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="Products" component={ProductsScreen} />
-            <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-            <Stack.Screen name="Transactions" component={TransactionsScreen} />
+            <Stack.Screen name="Tabs" component={TabsNavigator} />
+            <Stack.Screen 
+              name="Products" 
+              component={ProductsScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen 
+              name="ProductDetail" 
+              component={ProductDetailScreen}
+              options={{
+                presentation: 'modal',
+                animation: 'slide_from_bottom',
+              }}
+            />
+            <Stack.Screen 
+              name="Transactions" 
+              component={TransactionsScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen 
+              name="TopUp" 
+              component={TopUpScreen}
+              options={{
+                presentation: 'modal',
+                animation: 'slide_from_bottom',
+              }}
+            />
+            <Stack.Screen 
+              name="Settings" 
+              component={SettingsScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen 
+              name="Profile" 
+              component={ProfileScreen}
+              options={{
+                animation: 'slide_from_right',
+              }}
+            />
           </>
         )}
       </Stack.Navigator>
