@@ -1,40 +1,28 @@
 import React, { useState, useRef } from 'react';
-import ErrorMessage from '../../components/ErrorMessage';
-import Header from '../../components/Header';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  TextInput,
 } from 'react-native';
+import colors from '../../constants/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { auth } from '../../services/api';
+import { KeyRound } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { auth } from '../../services/api';
+import Header from '../../components/Header';
+import ErrorMessage from '../../components/ErrorMessage';
+import OTPInput from '../../components/ui/OTPInput';
 
 export const OTPVerificationScreen = ({ route, navigation }: any) => {
   const { kode } = route.params;
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const inputRefs = useRef<Array<TextInput | null>>([]);
-
-  const handleOtpChange = (value: string, index: number) => {
-    if (value.length > 1) {
-      value = value[0];
-    }
-    
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    // Move to next input if value is entered
-    if (value !== '' && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
+  const inputRefs = useRef<any>(null);
 
   const handleVerifyOTP = async () => {
     const otpString = otp.join('');
@@ -52,12 +40,23 @@ export const OTPVerificationScreen = ({ route, navigation }: any) => {
       await AsyncStorage.setItem('token', response.token);
       await AsyncStorage.setItem('user', JSON.stringify(response.reseller));
       
-      // Navigate to main app
-      navigation.replace('Home');
+      // Navigate to profile details
+      navigation.replace('Profile');
     } catch (error: any) {
       setError(error.response?.data?.message || 'Invalid OTP. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    try {
+      setError(null);
+      // Add your resend OTP API call here
+      // await auth.resendOtp(kode);
+      console.log('Resending OTP...');
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Failed to resend OTP. Please try again.');
     }
   };
 
@@ -74,8 +73,13 @@ export const OTPVerificationScreen = ({ route, navigation }: any) => {
       >
         <View style={styles.content}>
           <View style={styles.header}>
+            <KeyRound size={48} color="#2563EB" strokeWidth={1.5} style={styles.icon} />
+            <Text style={styles.title}>OTP Verification</Text>
             <Text style={styles.subtitle}>
               Enter the OTP sent to your WhatsApp
+            </Text>
+            <Text style={styles.phoneNumber}>
+              +62 {kode.replace(/(\d{4})(\d{4})/, '$1 $2')}
             </Text>
           </View>
 
@@ -85,34 +89,37 @@ export const OTPVerificationScreen = ({ route, navigation }: any) => {
             </View>
           )}
 
-          <View style={styles.otpContainer}>
-            {otp.map((digit, index) => (
-              <TextInput
-                key={index}
-                ref={(ref: TextInput | null) => {
-                  if (ref) {
-                    inputRefs.current[index] = ref;
-                  }
-                }}
-                style={styles.otpInput}
-                value={digit}
-                onChangeText={(value) => handleOtpChange(value, index)}
-                keyboardType="numeric"
-                maxLength={1}
-                selectTextOnFocus
-              />
-            ))}
-          </View>
+          <OTPInput
+            ref={inputRefs}
+            value={otp}
+            onChange={setOtp}
+            error={!!error}
+            containerStyle={styles.otpContainer}
+          />
 
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleVerifyOTP}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>
-              {loading ? 'Verifying...' : 'Verify OTP'}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleVerifyOTP}
+              disabled={loading}
+              accessibilityRole="button"
+              accessibilityLabel="Verify OTP Button"
+            >
+              <Text style={styles.buttonText}>
+                {loading ? 'Verifying...' : 'Verify OTP'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleResendOTP}
+              style={styles.resendButton}
+              accessibilityRole="button"
+              accessibilityLabel="Resend OTP Button"
+            >
+              <Text style={styles.resendText}>Didn't receive the code?</Text>
+              <Text style={styles.resendActionText}>Resend OTP</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -122,7 +129,7 @@ export const OTPVerificationScreen = ({ route, navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.common.white,
   },
   keyboardView: {
     flex: 1,
@@ -131,54 +138,90 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 100, // Add space at bottom for keyboard
   },
   header: {
-    marginBottom: 32,
+    marginBottom: 40,
     alignItems: 'center',
+  },
+  icon: {
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: colors.text.primary,
+    marginBottom: 8,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   subtitle: {
     fontSize: 16,
-    color: '#666666',
+    color: colors.text.secondary,
     textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    marginBottom: 4,
+  },
+  phoneNumber: {
+    fontSize: 16,
+    color: colors.text.primary,
+    fontWeight: '600',
+    textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   errorContainer: {
     marginBottom: 20,
     width: '100%',
   },
   otpContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     marginBottom: 32,
-    width: '100%',
     paddingHorizontal: 32,
   },
-  otpInput: {
-    width: 45,
-    height: 45,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    borderRadius: 8,
-    fontSize: 24,
-    textAlign: 'center',
-    color: '#000000',
-    backgroundColor: '#FFFFFF',
+  buttonContainer: {
+    width: '100%',
+    alignItems: 'center',
   },
   button: {
-    height: 48,
-    backgroundColor: '#2563EB',
-    borderRadius: 8,
+    height: 56,
+    backgroundColor: colors.primary.main,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
-    minWidth: 200,
+    width: '100%',
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   buttonDisabled: {
-    backgroundColor: '#93C5FD',
+    backgroundColor: colors.primary.light,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: colors.common.white,
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  resendButton: {
+    alignItems: 'center',
+  },
+  resendText: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    marginBottom: 4,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  resendActionText: {
+    fontSize: 14,
+    color: colors.primary.main,
+    fontWeight: '600',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
 });
 

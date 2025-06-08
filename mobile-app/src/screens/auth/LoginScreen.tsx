@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
-import ErrorMessage from '../../components/ErrorMessage';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
-  KeyboardAvoidingView,
   Platform,
+  Image,
+  KeyboardAvoidingView,
+  Dimensions,
 } from 'react-native';
-import { auth } from '../../services/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { User, Lock } from 'lucide-react-native';
+import { auth } from '../../services/api';
+import ErrorMessage from '../../components/ErrorMessage';
+import Input from '../../components/ui/Input';
+
+const { width } = Dimensions.get('window');
 
 export const LoginScreen = ({ navigation }: any) => {
   const [kode, setKode] = useState('');
@@ -24,14 +28,15 @@ export const LoginScreen = ({ navigation }: any) => {
       setError('Please fill in all fields');
       return;
     }
-
     try {
       setError(null);
       setLoading(true);
       await auth.login(kode, pin);
       navigation.navigate('OTPVerification', { kode });
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Invalid credentials. Please try again.');
+      setError(
+        error.response?.data?.message || 'Invalid credentials. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -39,16 +44,23 @@ export const LoginScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <View style={styles.headerBackground}>
+        <View style={styles.headerContent}>
+          <Image
+            source={require('../../../assets/icon.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>Welcome Back!</Text>
+          <Text style={styles.subtitle}>Sign in to continue</Text>
+        </View>
+      </View>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to continue</Text>
-          </View>
-
           {error && (
             <View style={styles.errorContainer}>
               <ErrorMessage message={error} />
@@ -56,35 +68,34 @@ export const LoginScreen = ({ navigation }: any) => {
           )}
 
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Kode</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your kode"
-                value={kode}
-                onChangeText={setKode}
-                autoCapitalize="none"
-                placeholderTextColor="#A0A0A0"
-              />
-            </View>
+            <Input
+              label="Kode"
+              value={kode}
+              onChangeText={setKode}
+              placeholder="Enter your kode"
+              autoCapitalize="none"
+              leftIcon={<User size={20} color="#6B7280" strokeWidth={2} />}
+              accessibilityLabel="Kode input field"
+            />
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>PIN</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your PIN"
-                value={pin}
-                onChangeText={setPin}
-                secureTextEntry
-                placeholderTextColor="#A0A0A0"
-                keyboardType="numeric"
-              />
-            </View>
+            <Input
+              label="PIN"
+              value={pin}
+              onChangeText={setPin}
+              placeholder="Enter your PIN"
+              secureTextEntry
+              keyboardType="numeric"
+              maxLength={6}
+              leftIcon={<Lock size={20} color="#6B7280" strokeWidth={2} />}
+              accessibilityLabel="PIN input field"
+            />
 
             <TouchableOpacity
               style={[styles.button, loading && styles.buttonDisabled]}
               onPress={handleLogin}
               disabled={loading}
+              accessibilityRole="button"
+              accessibilityLabel="Login Button"
             >
               <Text style={styles.buttonText}>
                 {loading ? 'Loading...' : 'Login'}
@@ -98,12 +109,44 @@ export const LoginScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  errorContainer: {
-    marginBottom: 20,
-  },
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  headerBackground: {
+    width: '100%',
+    height: 280,
+    backgroundColor: '#2563EB',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  headerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    marginBottom: 24,
+    borderRadius: 40,
+    backgroundColor: '#FFFFFF',
+    padding: 12,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#E5E7EB',
+    textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   keyboardView: {
     flex: 1,
@@ -111,48 +154,37 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 24,
-    justifyContent: 'center',
-  },
-  header: {
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666666',
+    marginTop: -30,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -3,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   form: {
-    gap: 20,
-  },
-  inputContainer: {
-    gap: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#000000',
-  },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#000000',
-    backgroundColor: '#FFFFFF',
+    marginTop: 20,
+    gap: 24,
   },
   button: {
-    height: 48,
+    height: 56,
+    borderRadius: 12,
     backgroundColor: '#2563EB',
-    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
     marginTop: 8,
   },
   buttonDisabled: {
@@ -162,6 +194,10 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  errorContainer: {
+    marginBottom: 20,
   },
 });
 
